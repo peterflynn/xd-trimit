@@ -56,6 +56,11 @@ function trimArtboard(artboard) {
         if (bounds.y + bounds.height > maxY || maxY === undefined) { maxY = bounds.y + bounds.height; }
     });
 
+    if (!maxX || !maxY) {
+        // If artboard is empty (0 children, or only empty groups), leave it untouched
+        return;
+    }
+
     // Upper-left crop
     artboard.moveInParentCoordinates(minX, minY);
     artboard.children.forEach(function (node) {
