@@ -24,6 +24,26 @@
 
 const sg = require("scenegraph");
 
+function showDialog(content, buttons) {
+    var dialog = document.createElement("dialog");
+    dialog.innerHTML = `
+        <style>
+        .space-below { margin-bottom: 12px; }
+        </style>
+        <form method="dialog">
+            <h1>TrimIt</h1>
+            <hr>
+            ${content}
+            <footer>${buttons}</footer>
+        </form>`;
+    document.appendChild(dialog);
+
+    return dialog.showModal().then(function () {
+        dialog.remove();
+    });
+}
+
+
 function trimArtboard(artboard) {
     var minX, minY, maxX, maxY;
     artboard.children.forEach(function (node) {
@@ -85,15 +105,31 @@ function trimRepeatGrid(rgrid) {
 }
 
 function trimSelection(selection, root) {
+    var didSomething = false;
+
     selection.items.forEach(function (node) {
         if (node instanceof sg.Artboard) {
+            didSomething = true;
             trimArtboard(node);
         } else if (node instanceof sg.Text && node.areaBox) {
+            didSomething = true;
             trimText(node);
         } else if (node instanceof sg.RepeatGrid) {
+            didSomething = true;
             trimRepeatGrid(node);
         }
     });
+
+    if (!didSomething) {
+        showDialog(`<div class="space-below">Select one or more items to trim:</div>
+            <ul>
+                <li>• Artboard &ndash; snap to size of contents, eliminating any margin</li>
+                <li>• Repeat Grid &ndash; snap to nearest whole number of grid cells</li>
+                <li>• Area Text &ndash; snap height to fit text perfectly with no clipping</li>
+            </ul>`,
+            `<button id="ok" type="submit" uxp-variant="cta">OK</button>`);
+        // (note: due to UXP bug, can't dismiss this dialog via Enter key...)
+    }
 }
 
 exports.commands = {
